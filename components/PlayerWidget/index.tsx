@@ -1,8 +1,9 @@
 import React, {useEffect, useState} from "react";
-import {View,Text,Image} from 'react-native'
+import {View,Text,Image,TouchableOpacity} from 'react-native'
 import styles from './styles'
 import {AntDesign, FontAwesome} from "@expo/vector-icons";
-import { Audio, Video } from 'expo-av';
+import {Sound} from 'expo-av/build/Audio/Sound';
+
 const song={
     id:'1',
     uri:'http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerMeltdowns.mp4',
@@ -12,17 +13,46 @@ const song={
 }
 
 const PlayerWidget=()=>{
-     const [sound, setSound] = useState<Sound|null>(null)
-      const onPlaybackStatusUpdate=(status)=>{
-         console.log(status);
-      }
+    const [sound, setSound] = useState<Sound|null>(null);
+    const [isPlaying,setIsPlaying]=useState<boolean>(true);
+    const [duration,setDuration]=useState<number|null>(null);
+    const [position,setPosition]=useState<number|null>(null);
+
+    const onPlaybackStatusUpdate=(status)=>{
+         setIsPlaying(status.isPlaying);
+         setDuration(status.durationMillis);
+         setPosition(status.positionMillis);
+    }
+
     const playCurrentSong=async ()=>{
-        const { sound } = Sound.createAsync(
+         if(sound){
+          await sound.unloadAsync();
+         }
+        const { sound:newSound } = await Sound.createAsync(
             { uri: song.uri },
-            { shouldPlay: true },
+            { shouldPlay: isPlaying },
              onPlaybackStatusUpdate
         )
-        setSound(sound)
+        setSound(newSound)
+    }
+
+
+    const onPlayPausePress=async ()=>{
+        if(!sound){
+            return;
+        }
+        if(isPlaying){
+            await sound.stopAsync();
+        }else{
+            await sound.playAsync();
+        }
+    }
+
+    const getProgress=()=>{
+        if(sound===null || duration===null || position===null){
+           return 0;
+        }
+        return (position/duration)*100;
     }
 
     useEffect(()=>{
@@ -31,15 +61,20 @@ const PlayerWidget=()=>{
 
     return(
         <View style={styles.container}>
-            <Image source={{uri:song.imageUri}} style={styles.image}/>
-            <View style={styles.rightContainer}>
-                <View style={styles.nameContainer}>
-                    <Text style={styles.title}>{song.title}</Text>
-                    <Text style={styles.artist}>{song.artist}</Text>
-                </View>
-                <View style={styles.iconContainer}>
-                    <AntDesign name='hearto' size={25} color={'#fff'}/>
-                    <FontAwesome name='play' size={25} color={'#fff'}/>
+            <View style={[styles.progress,{width:`${getProgress()}%`}]} />
+            <View style={styles.row}>
+                <Image source={{uri:song.imageUri}} style={styles.image}/>
+                <View style={styles.rightContainer}>
+                    <View style={styles.nameContainer}>
+                        <Text style={styles.title}>{song.title}</Text>
+                        <Text style={styles.artist}>{song.artist}</Text>
+                    </View>
+                    <View style={styles.iconContainer}>
+                        <AntDesign name='hearto' size={25} color={'#fff'}/>
+                        <TouchableOpacity onPress={onPlayPausePress}>
+                            <FontAwesome name={isPlaying?'pause':'play'} size={25} color={'#fff'}/>
+                        </TouchableOpacity>
+                    </View>
                 </View>
             </View>
         </View>

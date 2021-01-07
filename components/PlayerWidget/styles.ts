@@ -1,14 +1,12 @@
 import {StyleSheet} from "react-native";
 const styles=StyleSheet.create({
     container:{
-        flexDirection:'row',
         backgroundColor:'#1c1c1c',
         position:'absolute',
         bottom:75,
         width:'100%',
         borderWidth:2,
         borderColor:'black',
-        alignItems:'center'
     },
     title:{
         color:'white',
@@ -39,6 +37,13 @@ const styles=StyleSheet.create({
         alignItems:'center',
         width:100,
         justifyContent:'space-around'
+    },
+    progress:{
+        height:3,
+        backgroundColor:'#bcbcbc'
+    },
+    row:{
+        flexDirection:'row'
     }
 
 })
